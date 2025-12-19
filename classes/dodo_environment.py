@@ -163,6 +163,8 @@ class DodoEnvironment:
             for name in self.reward_scales
         }
         
+        self.disable_command_resampling = False
+
 
         # -----------------------------------------------------------------------------
         # Private class variables
@@ -418,7 +420,7 @@ class DodoEnvironment:
         self.robot.set_dofs_kp(self.kp, self.motors_dof_idx)
         self.robot.set_dofs_kv(self.kd, self.motors_dof_idx)
 
-        max_force = 3.0 # Newtonmeter
+        max_force = 6.0 # Newtonmeter
 
         self.robot.set_dofs_force_range(
             lower=-max_force * torch.ones(self.num_actions, dtype=torch.float32),
@@ -546,6 +548,8 @@ class DodoEnvironment:
             self.device,
         )
 
+        self.disable_command_resampling = True # disable command resampling during eval
+
         # ------------------------------------------------------------------
         # 1) Config-Dicts aus Pickle laden
         # ------------------------------------------------------------------
@@ -586,7 +590,7 @@ class DodoEnvironment:
         self.robot.set_dofs_kv(self.kd, self.motors_dof_idx)
 
         # Kraftgrenzen / Torque-Limit aus env_cfg (z.B. clip_actions), sonst Fallback
-        torque_limit = 3.0 #Newtonmeter
+        torque_limit = 6.0 #Newtonmeter
         self.robot.set_dofs_force_range(
             lower=- torque_limit * torch.ones(self.num_actions, dtype=torch.float32, device=self.device),
             upper=  torque_limit * torch.ones(self.num_actions, dtype=torch.float32, device=self.device),
@@ -1055,7 +1059,7 @@ class DodoEnvironment:
         self.robot.set_dofs_kp(kp, self.motors_dof_idx)
         self.robot.set_dofs_kv(kd, self.motors_dof_idx)
 
-        torque_limit = 3.0  # oder was in deiner Hand-Demo gut funktioniert
+        torque_limit = 6.0  # oder was in deiner Hand-Demo gut funktioniert
         self.robot.set_dofs_force_range(
             lower=- torque_limit * torch.ones(self.num_actions, dtype=torch.float32),
             upper= torque_limit * torch.ones(self.num_actions, dtype=torch.float32),
@@ -1386,12 +1390,13 @@ class DodoEnvironment:
             "episode_info": episode_info,
         }
 
-        # 9) Kommandos bei Bedarf neu sampeln
-        resample_every = int(self.command_config_dataclass.resampling_time_s / self.dt)
-        mask = (self.episode_length_buf > 0) & (self.episode_length_buf % resample_every == 0)
-        idx = mask.nonzero(as_tuple=False).flatten()
-        if idx.numel() > 0:
-            self._resample_commands(idx)
+        # 9) Kommandos bei Bedarf neu sampeln (optional deaktivierbar)
+        if not self.disable_command_resampling:
+            resample_every = int(self.command_config_dataclass.resampling_time_s / self.dt)
+            mask = (self.episode_length_buf > 0) & (self.episode_length_buf % resample_every == 0)
+            idx = mask.nonzero(as_tuple=False).flatten()
+            if idx.numel() > 0:
+                self._resample_commands(idx)
 
         # 10) Envs mit done == True zurücksetzen
         done_ids = done.nonzero(as_tuple=False).flatten()
@@ -1414,7 +1419,7 @@ class DodoEnvironment:
         dof_pos = self.dof_pos * self.obs_config_dataclass.obs_scales.dof_pos
         dof_vel = self.dof_vel * self.obs_config_dataclass.obs_scales.dof_vel
         joint_torques = self.last_torques
-        commands = self.commands
+        commands = self.commands * self.commands_scale
         proj_grav = self.projected_gravity  # (N,3)
 
         # -----------------------------

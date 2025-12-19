@@ -44,7 +44,7 @@ def main():
 
     #dodo_env.dodo_train_walking() #Training from scratch (random weights initialization)
 
-    dodo_env.eval_trained_model(exp_name="dodo-walking-new-001", v_x=0.3, v_y=0.0, v_ang=0.0, model_name="model_final.pt")
+    dodo_env.eval_trained_model(exp_name="dodo-walking-new-003", v_x=0.5, v_y=0.0, v_ang=0.0, model_name="model_final.pt")
 
     # checkpoint_path = "C:/Users/Liamb/SynologyDrive/TUM/3_Semester/dodo_alive/dodo_genesis/logs/dodo-standing/model_best.pt"
     # dodo_env.dodo_train_walking(

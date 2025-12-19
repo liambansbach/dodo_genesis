@@ -300,14 +300,14 @@ def init_dodo_configs(
         algorithm=TrainAlgorithm(
             class_name =                  "PPO",
             clip_param =                  0.2,
-            desired_kl =                  0.02,    # <- vorher 0.01
-            entropy_coef =                0.015,    # <- vorher 0.02
+            desired_kl =                  0.01,    # <- vorher 0.01
+            entropy_coef =                0.01,    # <- vorher 0.02
             gamma =                       0.99,    # <- vorher 0.98
             lam =                         0.95,
             learning_rate =               2e-4,     # <- vorher 2e-4
-            max_grad_norm =               0.5,    # <- vorher 1.0
-            num_learning_epochs =         5,      # <- vorher 8
-            num_mini_batches =            16,        # split big batch into many mini-batches
+            max_grad_norm =               1.0,    # <- vorher 1.0
+            num_learning_epochs =         4,      # <- vorher 8
+            num_mini_batches =            8,        # split big batch into many mini-batches
             schedule =                    "adaptive",
             use_clipped_value_loss =      True,
             value_loss_coef =             0.5 # <- vorher 1.0
@@ -333,7 +333,7 @@ def init_dodo_configs(
         ),
         runner_class_name=                "OnPolicyRunner",
         # collect at least one gait cycle per env: e.g. 1.0s / dt(0.01) = 100 steps
-        num_steps_per_env=                64, # vorher 256 oder 192
+        num_steps_per_env=                192, # vorher 256 oder 192
         save_interval=                    50,
         empirical_normalization=          True,
         seed=                             1,
@@ -387,7 +387,7 @@ def init_dodo_configs(
         base_init_quat=                   [1.0, 0.0, 0.0, 0.0],
         episode_length_s=                 10.0,
         resampling_time_s=                2.0,
-        action_scale=                     0.5,
+        action_scale=                     0.8,
         simulate_action_latency=          False,
         clip_actions=                     1.0, # war 100 -> sinnvoll clampen
         robot_file_path=                  robot_file_path_relative, # for example: "robot_mjcf": dodo_robot\dodo.xml
@@ -409,25 +409,25 @@ def init_dodo_configs(
     reward_config_dataclass: RewardCfg = RewardCfg(
         reward_scales=RewardScales(
             #velocity tracking
-            tracking_lin_vel=             3.0,
+            tracking_lin_vel=             10.0,
             tracking_ang_vel=             1.0,
             #stability and posture
-            orientation_stability=        1.0,
+            orientation_stability=        0.5,
             base_height=                  2.0,
-            survive=                      0.5,
+            survive=                      0.75,
             fall_penalty=                 40.0,
             vertical_stability=           0.05,  # oder 0.05 zum Start. hüpfen
             #gait-shaping (bird style)
-            periodic_gait=                0.8,
-            foot_swing_clearance=         1.5,
+            periodic_gait=                0.2,
+            foot_swing_clearance=         0.7,
             knee_extension_at_push=       0.1,
-            bird_hip_phase=               0.5,
+            bird_hip_phase=               0.1,
             forward_torso_pitch=          0.1,
             #Joint penalties
-            hip_abduction_penalty=        0.01,
+            hip_abduction_penalty=        0.1,
             #drift and efficiency
             lateral_drift_penalty=        0.0, # drift in x richtung 
-            action_rate=                  0.15, # Definiere eine Funktion, die dafür sorgt, dass die gesampleten aktionen nicht zu weit von den vorigen abweichen (smoother trajectory).
+            action_rate=                  0.03, # Definiere eine Funktion, die dafür sorgt, dass die gesampleten aktionen nicht zu weit von den vorigen abweichen (smoother trajectory).
             energy_penalty=               0.0,
         ),
         # Hyperparameter für die Gauß‑Formen und Targets
@@ -455,7 +455,7 @@ def init_dodo_configs(
         resampling_time_s= 2.0,
         command_ranges=CommandRanges(
             lin_vel_x=[0.1, 0.7],
-            lin_vel_y=[-0.0, 0.0], # Geradeaus
+            lin_vel_y=[0.0, 0.0], # Geradeaus
             ang_vel_yaw=[0.0, 0.0] # for example [-1.0, 1.0]
         )
     )
